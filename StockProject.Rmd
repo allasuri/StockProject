@@ -1,0 +1,77 @@
+---
+title: "Project 4"
+output: html_document
+---
+<h1>Strategy 1 </h1>
+```{r cars}
+require(quantmod)
+require(dplyr)
+require(tidyquant)
+require(ggplot2)
+stock_prices <- c("SPY") %>% tq_get(get = "stock.prices",
+                                                     from = "1990-01-01", to = "2020-01-01")
+stock_prices
+stock_returns_monthly <- stock_prices %>% group_by(symbol) %>% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = "monthly", col_rename = "Ra")
+stock_returns_monthly
+saving<-0
+a = c()
+for (i in 1:length(stock_returns_monthly$Ra)){
+  saving <- saving + 1000 
+  saving <- saving + saving * stock_returns_monthly$Ra[[i]]
+  if (i%%12 == 0){
+    a <- c(a,saving)
+  }
+}
+df <- data.frame(Saving=unlist(a))
+df
+plot(a, xlab = "Years", ylab = "Saving Account")
+print("The total money accumulated at the end of 30 years ")
+tail(a, n=1)
+```
+</br>
+</br>
+</br>
+</br>
+</br>
+</br>
+<h1> Strategy 2 </h1>
+```{r pressure}
+require(quantmod)
+require(dplyr)
+require(tidyquant)
+require(ggplot2)
+stock_prices <- c("SPY") %>% tq_get(get = "stock.prices",
+                                    from = "1993-01-01", to = "2020-01-01")
+sma <- SMA(stock_prices$close, n=50)
+stock_returns_monthly <- stock_prices %>% group_by(symbol) %>% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = "monthly", col_rename = "Ra")
+saving<-0
+b<-c(1,1,1)
+j<-0
+for (j in seq(from=63, to=length(stock_prices$close), by=21)){
+  if(stock_prices$close[[j]] > sma[[j]])
+    b<- c(b,1)
+  else 
+    b<- c(b,0)
+}
+b<-c(b,1)
+a = c()
+for (i in 1:length(stock_returns_monthly$Ra)){
+  saving <- saving + 1000
+  if (i < 3 ){
+    saving <- saving + saving * stock_returns_monthly$Ra[[i]]
+  }
+  else if (b[i] == 1){
+    saving <- saving + saving * stock_returns_monthly$Ra[[i]]
+  }
+  if (i%%12 == 0){
+    a <- c(a,saving)
+  }
+}
+df2 <- data.frame(Saving=unlist(a))
+df2
+plot(a, xlab = "Years", ylab = "Saving Account")
+print("The total money accumulated at the end of 30 years ")
+tail(a, n=1)
+```
+<h3> The 2nd strategy is better as the amount of money accumlated over 30 years is higher in the 2nd case. This is because in the 2nd strategy we only invest in stock when we see a upward trend thereby making it more profitable. We check for the upward trend by comparing the close day price to the 50 day SMA.
+</h3>
